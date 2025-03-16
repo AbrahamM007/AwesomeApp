@@ -1,0 +1,218 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator
+} from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
+import firestore from '@react-native-firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
+
+const AnnouncementsScreen = () => {
+  const navigation = useNavigation();
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Subscribe to announcements collection
+    const unsubscribe = firestore()
+      .collection('announcements')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(snapshot => {
+        const announcementList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() // Convert Firestore timestamp to JS Date
+        }));
+        setAnnouncements(announcementList);
+        setLoading(false);
+      }, error => {
+        console.error('Error fetching announcements:', error);
+        setLoading(false);
+      });
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, []);
+
+  const renderAnnouncementItem = ({ item }) => {
+    const isEvent = item.type === 'event';
+    const isMinistry = item.type === 'ministry';
+    
+    return (
+      <TouchableOpacity 
+        style={styles.announcementCard}
+        onPress={() => {
+          if (isEvent) {
+            navigation.navigate('EventDetails', { eventId: item.eventId });
+          } else if (isMinistry) {
+            navigation.navigate('MinistryDetails', { ministryId: item.ministryId });
+          }
+        }}
+      >
+        {item.imageUrl ? (
+          <Image 
+            source={{ uri: item.imageUrl }} 
+            style={styles.announcementImage} 
+          />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <FontAwesome5 
+              name={isEvent ? 'calendar-alt' : 'hands-helping'} 
+              size={30} 
+              color="#a0aec0" 
+            />
+          </View>
+        )}
+        
+        <View style={styles.announcementContent}>
+          <View style={styles.typeContainer}>
+            <Text style={styles.typeText}>
+              {isEvent ? 'Event' : isMinistry ? 'Ministry' : 'Announcement'}
+            </Text>
+          </View>
+          
+          <Text style={styles.announcementTitle}>{item.title}</Text>
+          <Text style={styles.announcementDescription} numberOfLines={2}>
+            {item.description}
+          </Text>
+          
+          {item.createdAt && (
+            <Text style={styles.dateText}>
+              {item.createdAt.toLocaleDateString()}
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#a9c25d" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Announcements</Text>
+      </View>
+      
+      {announcements.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <FontAwesome5 name="bell-slash" size={50} color="#a0aec0" />
+          <Text style={styles.emptyText}>No announcements yet</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={announcements}
+          renderItem={renderAnnouncementItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    backgroundColor: '#d4f5c9',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#2c5282',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#718096',
+    marginTop: 10,
+  },
+  listContainer: {
+    padding: 16,
+  },
+  announcementCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    flexDirection: 'row',
+  },
+  announcementImage: {
+    width: 100,
+    height: 100,
+  },
+  imagePlaceholder: {
+    width: 100,
+    height: 100,
+    backgroundColor: '#e2e8f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  announcementContent: {
+    flex: 1,
+    padding: 12,
+  },
+  typeContainer: {
+    backgroundColor: '#d4f5c9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  typeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#2c5282',
+  },
+  announcementTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2d3748',
+    marginBottom: 4,
+  },
+  announcementDescription: {
+    fontSize: 14,
+    color: '#4a5568',
+    marginBottom: 8,
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#718096',
+  },
+});
+
+export default AnnouncementsScreen;
