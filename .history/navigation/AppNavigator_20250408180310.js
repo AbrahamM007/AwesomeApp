@@ -5,7 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 // Import screens
-import HomeScreen from '../screens/HomeScreen';  // Fixed casing to match the actual file
+import HomeScreen from '../screens/homescreen';
 import EventsScreen from '../screens/EventsScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import CreateEventScreen from '../screens/CreateEventScreen';

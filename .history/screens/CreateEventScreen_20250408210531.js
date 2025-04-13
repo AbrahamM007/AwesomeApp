@@ -18,19 +18,8 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // In your imports
 import { db, auth } from '../firebase/config';
-import { collection, addDoc, serverTimestamp, doc, setDoc } from '../firebase/config';
-
-// Try to import Network with a fallback
-let Network;
-try {
-  Network = require('expo-network');
-} catch (error) {
-  console.log('expo-network not available:', error.message);
-  // Create a mock Network object
-  Network = {
-    getNetworkStateAsync: async () => ({ isConnected: true, isInternetReachable: true })
-  };
-}
+import { collection, addDoc, serverTimestamp } from '../firebase/config';
+import * as Network from 'expo-network';
 
 const CreateEventScreen = () => {
   const navigation = useNavigation();

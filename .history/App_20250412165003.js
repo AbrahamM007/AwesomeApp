@@ -40,27 +40,6 @@ function CustomTabBar({ state, descriptors, navigation }) {
   const buttonScale = useRef(new Animated.Value(1)).current;
   const glowOpacity = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const [showRipple, setShowRipple] = useState(false);
-  const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
-  
-  // Pulse animation for the church icon
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
   
   // Rotation interpolation for the church icon
   const spin = rotateAnim.interpolate({
@@ -69,21 +48,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
   });
 
   // Handle press animation for buttons
-  const handlePressIn = (index, event) => {
-    // Get the position for the ripple effect
-    if (event && event.nativeEvent) {
-      setRipplePosition({
-        x: event.nativeEvent.locationX,
-        y: event.nativeEvent.locationY,
-      });
-      setShowRipple(true);
-      
-      // Hide ripple after animation
-      setTimeout(() => {
-        setShowRipple(false);
-      }, 600);
-    }
-    
+  const handlePressIn = (index) => {
     setPressed(index);
     Animated.parallel([
       Animated.spring(buttonScale, {
@@ -212,13 +177,14 @@ function CustomTabBar({ state, descriptors, navigation }) {
         borderColor: 'rgba(255, 255, 255, 0.8)',
         bottom: 25,
         position: 'absolute',
+        backdropFilter: 'blur(10px)',
       }}>
         {/* Home Button */}
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityState={state.index === 0 ? { selected: true } : {}}
           onPress={() => navigation.navigate('Home')}
-          onPressIn={(e) => handlePressIn(0, e)}
+          onPressIn={() => handlePressIn(0)}
           onPressOut={handlePressOut}
           style={{ 
             alignItems: 'center', 
@@ -227,30 +193,14 @@ function CustomTabBar({ state, descriptors, navigation }) {
             borderRadius: 25,
             width: 50,
             height: 50,
-            overflow: 'hidden',
+            transform: [{ scale: pressed === 0 ? buttonScale : 1 }]
           }}
         >
-          {showRipple && pressed === 0 && (
-            <Animated.View style={{
-              position: 'absolute',
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              backgroundColor: 'rgba(169, 194, 93, 0.3)',
-              left: ripplePosition.x - 50,
-              top: ripplePosition.y - 50,
-              transform: [{ scale: buttonScale }],
-            }} />
-          )}
-          <Animated.View style={{
-            transform: [{ scale: pressed === 0 ? buttonScale : 1 }]
-          }}>
-            <Ionicons 
-              name="home" 
-              size={24} 
-              color={getIconColor(0)} 
-            />
-          </Animated.View>
+          <Ionicons 
+            name="home" 
+            size={24} 
+            color={getIconColor(0)} 
+          />
           {state.index === 0 && (
             <View style={{
               position: 'absolute',
@@ -268,7 +218,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
           accessibilityRole="button"
           accessibilityState={state.index === 1 ? { selected: true } : {}}
           onPress={() => navigation.navigate('Events')}
-          onPressIn={(e) => handlePressIn(1, e)}
+          onPressIn={() => handlePressIn(1)}
           onPressOut={handlePressOut}
           style={{ 
             alignItems: 'center', 
@@ -277,30 +227,14 @@ function CustomTabBar({ state, descriptors, navigation }) {
             borderRadius: 25,
             width: 50,
             height: 50,
-            overflow: 'hidden',
+            transform: [{ scale: pressed === 1 ? buttonScale : 1 }]
           }}
         >
-          {showRipple && pressed === 1 && (
-            <Animated.View style={{
-              position: 'absolute',
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              backgroundColor: 'rgba(169, 194, 93, 0.3)',
-              left: ripplePosition.x - 50,
-              top: ripplePosition.y - 50,
-              transform: [{ scale: buttonScale }],
-            }} />
-          )}
-          <Animated.View style={{
-            transform: [{ scale: pressed === 1 ? buttonScale : 1 }]
-          }}>
-            <FontAwesome5 
-              name="calendar-alt" 
-              size={22} 
-              color={getIconColor(1)} 
-            />
-          </Animated.View>
+          <FontAwesome5 
+            name="calendar-alt" 
+            size={22} 
+            color={getIconColor(1)} 
+          />
           {state.index === 1 && (
             <View style={{
               position: 'absolute',
@@ -338,17 +272,6 @@ function CustomTabBar({ state, descriptors, navigation }) {
               overflow: 'hidden',
             }}
           >
-            {/* Animated glow ring */}
-            <Animated.View style={{
-              position: 'absolute',
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              borderWidth: 2,
-              borderColor: 'rgba(255, 255, 255, 0.7)',
-              transform: [{ scale: pulseAnim }],
-            }} />
-            
             {/* Glow effect behind the icon */}
             <View style={{
               position: 'absolute',
@@ -364,8 +287,8 @@ function CustomTabBar({ state, descriptors, navigation }) {
             }}>
               <FontAwesome5 
                 name="church" 
-                size={28}
-                color="#fff"
+                size={28} 
+                color="#fff" 
               />
             </Animated.View>
             
@@ -379,17 +302,6 @@ function CustomTabBar({ state, descriptors, navigation }) {
               borderRadius: 20,
               backgroundColor: 'rgba(255, 255, 255, 0.2)',
             }} />
-            
-            {/* Light beam effect */}
-            {state.index === 2 && (
-              <View style={{
-                position: 'absolute',
-                width: 100,
-                height: 100,
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                transform: [{ rotate: '45deg' }],
-              }} />
-            )}
           </TouchableOpacity>
         </View>
         
@@ -398,7 +310,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
           accessibilityRole="button"
           accessibilityState={state.index === 3 ? { selected: true } : {}}
           onPress={() => navigation.navigate('Community')}
-          onPressIn={(e) => handlePressIn(3, e)}
+          onPressIn={() => handlePressIn(3)}
           onPressOut={handlePressOut}
           style={{ 
             alignItems: 'center', 
@@ -407,30 +319,14 @@ function CustomTabBar({ state, descriptors, navigation }) {
             borderRadius: 25,
             width: 50,
             height: 50,
-            overflow: 'hidden',
+            transform: [{ scale: pressed === 3 ? buttonScale : 1 }]
           }}
         >
-          {showRipple && pressed === 3 && (
-            <Animated.View style={{
-              position: 'absolute',
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              backgroundColor: 'rgba(169, 194, 93, 0.3)',
-              left: ripplePosition.x - 50,
-              top: ripplePosition.y - 50,
-              transform: [{ scale: buttonScale }],
-            }} />
-          )}
-          <Animated.View style={{
-            transform: [{ scale: pressed === 3 ? buttonScale : 1 }]
-          }}>
-            <Ionicons 
-              name="people" 
-              size={24} 
-              color={getIconColor(3)} 
-            />
-          </Animated.View>
+          <Ionicons 
+            name="people" 
+            size={24} 
+            color={getIconColor(3)} 
+          />
           {state.index === 3 && (
             <View style={{
               position: 'absolute',
@@ -448,7 +344,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
           accessibilityRole="button"
           accessibilityState={state.index === 4 ? { selected: true } : {}}
           onPress={() => navigation.navigate('Profile')}
-          onPressIn={(e) => handlePressIn(4, e)}
+          onPressIn={() => handlePressIn(4)}
           onPressOut={handlePressOut}
           style={{ 
             alignItems: 'center', 
@@ -457,30 +353,14 @@ function CustomTabBar({ state, descriptors, navigation }) {
             borderRadius: 25,
             width: 50,
             height: 50,
-            overflow: 'hidden',
+            transform: [{ scale: pressed === 4 ? buttonScale : 1 }]
           }}
         >
-          {showRipple && pressed === 4 && (
-            <Animated.View style={{
-              position: 'absolute',
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              backgroundColor: 'rgba(169, 194, 93, 0.3)',
-              left: ripplePosition.x - 50,
-              top: ripplePosition.y - 50,
-              transform: [{ scale: buttonScale }],
-            }} />
-          )}
-          <Animated.View style={{
-            transform: [{ scale: pressed === 4 ? buttonScale : 1 }]
-          }}>
-            <Ionicons 
-              name="person" 
-              size={24} 
-              color={getIconColor(4)} 
-            />
-          </Animated.View>
+          <Ionicons 
+            name="person" 
+            size={24} 
+            color={getIconColor(4)} 
+          />
           {state.index === 4 && (
             <View style={{
               position: 'absolute',

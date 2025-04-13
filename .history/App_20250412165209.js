@@ -364,8 +364,8 @@ function CustomTabBar({ state, descriptors, navigation }) {
             }}>
               <FontAwesome5 
                 name="church" 
-                size={28}
-                color="#fff"
+                size: 28,
+                color: "#fff",
               />
             </Animated.View>
             

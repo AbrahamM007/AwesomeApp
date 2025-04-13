@@ -11,11 +11,9 @@ import {
   where, 
   orderBy, 
   limit, 
-  serverTimestamp,
-  connectFirestoreEmulator
+  serverTimestamp 
 } from 'firebase/firestore';
-import { initializeAuth, getReactNativePersistence, onAuthStateChanged } from 'firebase/auth';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuth } from 'firebase/auth';
 import { getApps, getApp } from 'firebase/app';
 
 // Your web app's Firebase configuration
@@ -30,46 +28,13 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase only once with a simpler approach
-let app;
-try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-} catch (error) {
-  console.error("Error initializing Firebase app:", error);
-  throw error;
-}
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Auth with AsyncStorage persistence
-let auth;
-try {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-  });
-  
-  // Add auth state listener for debugging
-  if (__DEV__) {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('Auth state: User is signed in', user.uid);
-      } else {
-        console.log('Auth state: User is signed out');
-      }
-    });
-  }
-} catch (error) {
-  console.error("Error initializing Auth:", error);
-  throw error;
-}
+// Use getFirestore instead of initializeFirestore to avoid multiple initialization errors
+const db = getFirestore(app);
 
-// Initialize Firestore with error handling
-let db;
-try {
-  db = getFirestore(app);
-  // Uncomment the line below if you're using a local emulator
-  // connectFirestoreEmulator(db, 'localhost', 8080);
-} catch (error) {
-  console.error("Error initializing Firestore:", error);
-  throw error;
-}
+// Initialize Auth
+const auth = getAuth(app);
 
 // Null analytics to avoid errors
 const analytics = null;

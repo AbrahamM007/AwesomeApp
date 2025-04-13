@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,47 +12,17 @@ import {
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { auth } from '../firebase/config';
 
 const ProfileScreen = () => {
   const { userInfo, logout } = useAuth();
   const navigation = useNavigation();
   
-  // State declarations
-  const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-  const [reminders, setReminders] = useState(true);
-  
-  // Fix: Make sure useEffect is used correctly
-  useEffect(() => {
-    console.log('ProfileScreen mounted');
-    // Check authentication state when component mounts
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        console.log('User is signed in:', user.uid);
-      } else {
-        console.log('User is signed out');
-      }
-    });
-
-    // Cleanup subscription on unmount
-    return () => {
-      console.log('ProfileScreen unmounted');
-      unsubscribe();
-    };
-  }, []);
-  
   const handleLogout = async () => {
-    try {
-      await logout();
-      console.log('User logged out successfully');
-    } catch (error) {
-      console.error('Logout error:', error);
-      Alert.alert('Logout Failed', 'There was a problem logging out. Please try again.');
-    }
+    await logout();
+    // Navigation will be handled by AppContent
   };
   
-  // Navigation functions remain the same
+  // Navigation functions
   const navigateToMyGroups = () => {
     navigation.navigate('MyGroups');
   };
@@ -68,6 +38,10 @@ const ProfileScreen = () => {
   const navigateToCreateEvent = () => {
     navigation.navigate('CreateEvent');
   };
+  
+  const [notifications, setNotifications] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [reminders, setReminders] = useState(true);
   
   return (
     <ScrollView style={styles.container}>
@@ -348,3 +322,26 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
+
+
+// Make sure to import React and useEffect
+
+// Add this near the top of your component
+useEffect(() => {
+  // Check authentication state when component mounts
+  const unsubscribe = auth.onAuthStateChanged((user) => {
+    if (user) {
+      console.log('User is signed in:', user.uid);
+      // You might want to update state here to reflect the user is logged in
+      // setIsLoggedIn(true);
+      // setUserData({...});
+    } else {
+      console.log('No user is signed in.');
+      // setIsLoggedIn(false);
+      // setUserData(null);
+    }
+  });
+
+  // Cleanup subscription on unmount
+  return () => unsubscribe();
+}, []);
